@@ -25,8 +25,10 @@ void dnsManage::doResponse(u_char* packet,class DbManage& db){
             memcpy(&server_ip, &ans->address, 4);
             memcpy(&addr.s_addr, &ans->address, 4);
             s_i = inet_ntoa(addr);
+            mu.lock();
             db.insertServer(s_i,const_cast<char*>(host.c_str()),c_m);
-            cout << host << "  /  " << "1----server ip : " << inet_ntoa(addr) << endl;
+            mu.unlock();
+            //cout << host << "  /  " << "1----server ip : " << inet_ntoa(addr) << endl;
         }
         break;
     default:
@@ -35,8 +37,10 @@ void dnsManage::doResponse(u_char* packet,class DbManage& db){
                 memcpy( &server_ip, &ans->address, 4);
                 memcpy(&addr.s_addr, &ans->address, 4);
                 s_i = inet_ntoa(addr);
+                mu.lock();
                 db.insertServer(s_i,const_cast<char*>(host.c_str()),c_m);
-                cout << host << "  /  " << "2---server ip : " << inet_ntoa(addr) << endl;
+                mu.unlock();
+                //cout << host << "  /  " << "2---server ip : " << inet_ntoa(addr) << endl;
                 ans = reinterpret_cast<struct dnsAnswer*>(reinterpret_cast<char*>(ans) + sizeof(struct dnsAnswer));
             }
             else if(ntohs(ans->type)==5){// CNAME
@@ -46,7 +50,9 @@ void dnsManage::doResponse(u_char* packet,class DbManage& db){
     }
     memcpy(&addr.s_addr, &ipv4_p->ip_dst.s_addr, 4);
     c_i = inet_ntoa(addr);
-    printf("%02X%02X%02X%02X%02X%02X",c_m[0],c_m[1],c_m[2],c_m[3],c_m[4],c_m[5]);
-    cout << " / " << inet_ntoa(addr) << endl;
+//    printf("%02X%02X%02X%02X%02X%02X",c_m[0],c_m[1],c_m[2],c_m[3],c_m[4],c_m[5]);
+//    cout << " / " << inet_ntoa(addr) << endl;
+    mu.lock();
     db.insertClient(c_m,c_i);
+    mu.unlock();
 }

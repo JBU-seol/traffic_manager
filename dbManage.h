@@ -19,7 +19,7 @@ public:
     void test();
     void insertClient(uint8_t *mac, char* ip);
     void insertServer(char *ip, char* domain, uint8_t* mac);
-    void insertLog(uint8_t *c_mac, char* domain, unsigned int stime, int etime, uint32_t bps, uint32_t pps);
+    void insertLog(uint8_t *c_mac, char* domain, unsigned int stime, unsigned int etime, uint32_t bps, uint32_t pps);
     MYSQL_ROW getDomain(char *ip);
     MYSQL_ROW getLog(char* mac, int st, int et);
 };

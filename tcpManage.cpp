@@ -1,7 +1,15 @@
-#include "tcpManage.h"
+﻿#include "tcpManage.h"
 #include "dbManage.h"
 
-tcpManage::tcpManage(){ };
+tcpManage::tcpManage(){
+    hdsh[0] = false;
+    hdsh[1] = false;
+    hdsh[2] = false;
+    c_m=nullptr;
+    bps = 0;
+    pps = 0;
+    iter = flow.end();
+};
 tcpManage::~tcpManage(){ };
 
 void tcpManage::hdshzero(){
@@ -36,7 +44,6 @@ void tcpManage::doTraffic(u_char* packet,struct pcap_pkthdr* header,class DbMana
         s_i = ipv4_p->ip_src.s_addr;
     }
     flowkey fk(c_i,s_i,sport,dport);
-
     switch(tcp_p->th_flags){
     case TH_SYN:
         hdsh[0]=true;
@@ -49,12 +56,22 @@ void tcpManage::doTraffic(u_char* packet,struct pcap_pkthdr* header,class DbMana
         break;
     case (TH_FIN|TH_ACK): // Session finish 1
     case TH_RST: // Session finish 2
+        std::cout << "FIN & RST " << std::endl;
         iter = flow.find(fk);
-        if(iter != flow.end()){
+        if(iter != flow.end() && iter->second.pps != 0){
             memcpy(&addr.s_addr, &iter->first.server_ip, 4);
             s_pointer = inet_ntoa(addr);
+            std::cout  <<iter->second.pps << " / " <<iter->second.bps << std::endl;
+            printf("%s\n",s_pointer);
             row = db.getDomain(s_pointer);
-            db.insertLog(iter->second.macaddr,reinterpret_cast<char*>(row[0]),static_cast<unsigned int>(iter->second.stime),0,iter->second.bps,iter->second.pps);
+            if(row == nullptr){
+                std::cout << " fail" << std::endl;
+            }
+            else{
+                std::cout << " success" << std::endl;
+                db.insertLog(iter->second.macaddr,row[0],static_cast<unsigned int>(iter->second.stime),static_cast<unsigned int>(header->ts.tv_sec),iter->second.bps,iter->second.pps);
+
+            }
         }
         flow.erase(fk);
         iter = flow.end();
@@ -63,9 +80,8 @@ void tcpManage::doTraffic(u_char* packet,struct pcap_pkthdr* header,class DbMana
     case (TH_PUSH|TH_ACK): // TCP Data
         iter = flow.find(fk);
         if( iter != flow.end()){
+            iter->second.bps+=header->caplen;
             iter->second.pps++;
-            iter->second.bps += header->caplen;
-            std::cout << iter->second.pps << " / " <<iter->second.bps << std::endl;
         }
         hdshzero();
         break;
@@ -76,7 +92,12 @@ void tcpManage::doTraffic(u_char* packet,struct pcap_pkthdr* header,class DbMana
         flowvalue fv(c_m,t,bps,pps);
         if( flow.find(fk) == flow.end() ){
             auto ret = flow.insert(std::pair<flowkey,flowvalue>(fk,fv));
-            if(ret.second == true) std::cout << " Insert Success " << std::endl;
+            if(ret.second == false){
+                addr.s_addr = fk.server_ip;
+                std::cout << " flow map insert error " << inet_ntoa(addr)<< std::endl;
+                addr.s_addr = ret.first->first.server_ip;
+                std::cout << " flow map insert error " << inet_ntoa(addr)<< std::endl;
+            }
         }
     }
 }

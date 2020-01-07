@@ -1,5 +1,6 @@
 #include <libnet.h>
 #include <string>
+#include <mutex>
 #ifndef DNSMANAGE_H
 #define DNSMANAGE_H
 
@@ -22,6 +23,7 @@ public:
     char* c_i = nullptr;
     char* s_i = nullptr;
     struct in_addr addr;
+    std::mutex mu;
     dnsManage();
     ~dnsManage();
     void doResponse(u_char* packet,class DbManage& db);

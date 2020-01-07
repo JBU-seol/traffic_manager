@@ -3,6 +3,7 @@
 #include <time.h>
 #include <pcap.h>
 #include <map>
+#include <mutex>
 #include "dbManage.h"
 #ifndef TCPMANAGE_H
 #define TCPMANAGE_H
@@ -25,13 +26,13 @@ public:
     }
     bool operator<(const flowkey& k) const
     {
-        if( client_ip < k.client_ip){
+        if( client_ip != k.client_ip){
             return client_ip < k.client_ip;
         }
-        else if( server_ip < k.server_ip){
+        else if( server_ip != k.server_ip){
             return server_ip < k.server_ip;
         }
-        else if( client_port < k.client_port){
+        else if( client_port != k.client_port){
             return client_port < k.client_port;
         }
         return server_port < k.server_port;
@@ -46,7 +47,7 @@ public:
     uint32_t pps;
     flowvalue(){ }
     ~flowvalue(){ }
-    flowvalue(uint8_t* m,__time_t _stime, uint32_t _bps, uint32_t _pps){
+    flowvalue(uint8_t* m,__time_t _stime,uint32_t _bps, uint32_t _pps){
         memcpy(macaddr, m, 6);
         stime = _stime;
         bps = _bps;
@@ -54,13 +55,13 @@ public:
     }
     bool operator<(const flowvalue& v) const
     {
-        if( macaddr < v.macaddr){
+        if( macaddr != v.macaddr){
             return macaddr < v.macaddr;
         }
-        else if( stime < v.stime){
+        else if( stime != v.stime){
             return stime < v.stime;
         }
-        else if( bps < v.bps){
+        else if( bps != v.bps){
             return bps < v.bps;
         }
         return pps < v.pps;
@@ -69,7 +70,7 @@ public:
 
 class tcpManage{
 public:
-    bool hdsh[3] = {false,};
+    bool hdsh[3];
     uint32_t c_i, s_i;
     uint16_t sport, dport;
     uint8_t* c_m;
@@ -78,6 +79,7 @@ public:
     uint32_t pps = 0;
     __time_t t;
     char* s_pointer;
+    char* temp;
     struct in_addr addr;
     MYSQL_ROW row;
     std::map<flowkey,flowvalue> flow;
