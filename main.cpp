@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
     struct pcap_pkthdr* header;
     const u_char* packet;
     //pcap_t* handle = pcap_open_live(dev, BUFSIZ, 1, 1, errbuf);
-    pcap_t* handle = pcap_open_offline("/root/Desktop/3.pcap",errbuf);
+    pcap_t* handle = pcap_open_offline("/root/Desktop/1.pcap",errbuf);
     if( handle == nullptr){
         fprintf(stderr, "couldn't open device %s: %s\n", dev, errbuf);
         exit(-1);

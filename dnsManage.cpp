@@ -13,6 +13,12 @@ void dnsManage::doResponse(u_char* packet,class DbManage& db){
     struct libnet_dnsv4udp_hdr* dns_p = reinterpret_cast<struct libnet_dnsv4udp_hdr*>(reinterpret_cast<char*>(udp_p) + sizeof(struct libnet_udp_hdr));
     uint8_t* dns_query = reinterpret_cast<uint8_t*>( reinterpret_cast<char*>(dns_p) + sizeof(struct libnet_dnsv4udp_hdr));
     string host(reinterpret_cast<char*>(dns_query));
+    for(auto iter = host.begin()+1; iter != host.end(); iter++){
+        if( *iter < 0x1F && *iter != 0x00){
+            *iter = '.';
+        }
+    }
+    std::cout<<host<<std::endl;
     struct dnsAnswer* ans = reinterpret_cast<struct dnsAnswer*>( reinterpret_cast<char*>(dns_query) + host.size()+5);
     uint16_t num = ntohs(dns_p->num_answ_rr);//DNS Answer's num
     uint8_t* c_m = eth_p->ether_dhost;
@@ -50,8 +56,8 @@ void dnsManage::doResponse(u_char* packet,class DbManage& db){
     }
     memcpy(&addr.s_addr, &ipv4_p->ip_dst.s_addr, 4);
     c_i = inet_ntoa(addr);
-//    printf("%02X%02X%02X%02X%02X%02X",c_m[0],c_m[1],c_m[2],c_m[3],c_m[4],c_m[5]);
-//    cout << " / " << inet_ntoa(addr) << endl;
+    //    printf("%02X%02X%02X%02X%02X%02X",c_m[0],c_m[1],c_m[2],c_m[3],c_m[4],c_m[5]);
+    //    cout << " / " << inet_ntoa(addr) << endl;
     mu.lock();
     db.insertClient(c_m,c_i);
     mu.unlock();
