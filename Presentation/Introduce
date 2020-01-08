@@ -1,2 +1,9 @@
 2019-2 CCIT Project Presentation
+
+If you want to run this cpp file,
+you must run apache2 & mysql
+
+#service apache2 start
+#service mysql start
+
 Thank you.
